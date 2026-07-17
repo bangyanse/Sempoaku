@@ -1,0 +1,820 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Latihan Sempoa</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Sora:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg: #17110c;
+    --bg-panel: #221910;
+    --frame: #4a3016;
+    --frame-light: #6b4a26;
+    --gold: #d4a943;
+    --gold-dim: #8f7031;
+    --cream: #ede2cd;
+    --muted: #b3a289;
+    --bead-red: #a8453a;
+    --correct: #3dd6a8;
+    --wrong: #ff6f78;
+    --teal: #3dd6c0;
+    --teal-dim: #1f8f80;
+    --violet: #b18cff;
+    --violet-dim: #7c5ce0;
+    --rose: #ff7597;
+    --rose-dim: #d9506f;
+    --radius: 14px;
+  }
+  *{ box-sizing: border-box; }
+  html,body{ height:100%; }
+  body{
+    margin:0;
+    background:
+      radial-gradient(ellipse at 15% -10%, rgba(61,214,192,0.10) 0%, transparent 45%),
+      radial-gradient(ellipse at 100% 0%, rgba(177,140,255,0.09) 0%, transparent 50%),
+      radial-gradient(ellipse at 100% 110%, rgba(255,117,151,0.08) 0%, transparent 55%),
+      var(--bg);
+    color: var(--cream);
+    font-family: 'Sora', sans-serif;
+    min-height:100vh;
+    display:flex;
+    justify-content:center;
+    padding: 32px 16px 60px;
+  }
+  .app{ width:100%; max-width: 720px; }
+
+  .eyebrow{
+    font-family:'JetBrains Mono', monospace;
+    font-size:12px;
+    letter-spacing: 3px;
+    text-transform:uppercase;
+    color: var(--gold-dim);
+    margin-bottom:6px;
+  }
+  h1{
+    font-family:'Fraunces', serif;
+    font-weight:600;
+    font-size: clamp(28px, 5vw, 40px);
+    margin: 0 0 6px;
+    color: var(--cream);
+  }
+  .sub{ color: var(--muted); font-size:15px; margin:0 0 28px; line-height:1.5; }
+
+  .panel{
+    background: var(--bg-panel);
+    border: 1px solid var(--frame-light);
+    border-radius: var(--radius);
+    padding: 28px;
+    margin-bottom: 20px;
+    box-shadow: 0 12px 30px -14px rgba(0,0,0,0.6);
+  }
+
+  /* --- Abacus rod signature element --- */
+  .rod-wrap{ margin-bottom: 22px; }
+  .rod-label{
+    font-family:'JetBrains Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 2px;
+    color: var(--muted);
+    text-transform: uppercase;
+    margin-bottom: 10px;
+  }
+  .rod{
+    position: relative;
+    height: 46px;
+    display:flex;
+    align-items:center;
+    gap: 8px;
+    padding: 0 4px;
+    overflow-x:auto;
+  }
+  .rod::before{
+    content:'';
+    position:absolute;
+    left:0; right:0; top:50%;
+    height:3px;
+    background: linear-gradient(90deg, var(--teal-dim), var(--gold-dim), var(--violet-dim), var(--rose-dim));
+    transform: translateY(-50%);
+    border-radius: 2px;
+  }
+  .bead{
+    position:relative;
+    z-index:1;
+    width:26px; height:26px;
+    border-radius:50%;
+    flex: 0 0 auto;
+    display:flex; align-items:center; justify-content:center;
+    font-family:'JetBrains Mono', monospace;
+    font-size:9px; font-weight:700;
+    color: rgba(0,0,0,0.55);
+    box-shadow: 0 3px 6px rgba(0,0,0,0.5), inset 0 1px 2px rgba(255,255,255,0.35);
+    animation: slide-in 0.35s ease-out;
+  }
+  .bead.correct{ background: radial-gradient(circle at 35% 30%, #8ff0dd, var(--teal-dim)); }
+  .bead.wrong{ background: radial-gradient(circle at 35% 30%, #ffaab5, var(--rose-dim)); }
+  .bead.placeholder{
+    background: transparent;
+    border: 2px dashed var(--frame-light);
+    box-shadow:none;
+  }
+  @keyframes slide-in{
+    from{ transform: translateX(-16px); opacity:0; }
+    to{ transform: translateX(0); opacity:1; }
+  }
+
+  .row{ display:flex; gap:10px; flex-wrap:wrap; }
+
+  button{
+    font-family:'Sora', sans-serif;
+    font-weight:600;
+    font-size:14px;
+    cursor:pointer;
+    border-radius: 10px;
+    border: 1px solid transparent;
+    padding: 12px 20px;
+    transition: transform 0.12s ease, background 0.15s ease, border-color 0.15s ease;
+  }
+  button:focus-visible{ outline: 2px solid var(--gold); outline-offset:2px; }
+  button:active{ transform: scale(0.97); }
+
+  .btn-primary{
+    background: var(--gold);
+    color: #241a10;
+  }
+  .btn-primary:hover{ background:#e2ba5c; }
+
+  .btn-ghost{
+    background: transparent;
+    border-color: var(--frame-light);
+    color: var(--cream);
+  }
+  .btn-ghost:hover{ border-color: var(--gold-dim); }
+
+  .btn-option{
+    background: var(--frame);
+    color: var(--cream);
+    border-color: var(--frame-light);
+    min-width: 64px;
+  }
+  #digit-options .btn-option.active{
+    background: var(--teal);
+    color:#0d2b26;
+    border-color: var(--teal);
+  }
+  #term-options .btn-option.active{
+    background: var(--violet);
+    color:#221347;
+    border-color: var(--violet);
+  }
+  #count-options .btn-option.active{
+    background: var(--rose);
+    color:#3a0d1d;
+    border-color: var(--rose);
+  }
+
+  .field-label{
+    font-size:13px;
+    color: var(--muted);
+    margin: 18px 0 10px;
+  }
+  .field-label:first-child{ margin-top:0; }
+
+  /* Problem display */
+  .stage{
+    text-align:center;
+    padding: 8px 10px 4px;
+    border-radius: 12px;
+    transition: background 0.15s ease;
+  }
+  .stage.tappable{
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .stage.tappable:active{
+    background: rgba(212,169,67,0.08);
+  }
+  .timer{
+    font-family:'JetBrains Mono', monospace;
+    font-size: 15px;
+    color: var(--gold-dim);
+    margin-bottom: 14px;
+    letter-spacing: 1px;
+  }
+  .expr{
+    font-family:'JetBrains Mono', monospace;
+    font-size: clamp(16px, 3.2vw, 22px);
+    line-height: 2.1;
+    color: var(--cream);
+    padding: 18px 14px;
+    background: linear-gradient(180deg, rgba(212,169,67,0.06), transparent);
+    border-radius: 10px;
+    margin-bottom: 22px;
+    overflow-wrap: break-word;
+    max-width: 100%;
+  }
+  .expr .term{ display:inline-block; }
+  .expr .op{ display:inline-block; font-weight:700; }
+  .expr .op.plus{ color: var(--teal); }
+  .expr .op.minus{ color: var(--rose); }
+
+  .hint{
+    text-align:center;
+    font-size:13px;
+    color: var(--muted);
+    margin-bottom: 20px;
+  }
+  .hint strong{
+    font-family:'JetBrains Mono', monospace;
+    color: var(--gold);
+    letter-spacing:1px;
+  }
+
+  .answer-row{
+    display:flex;
+    gap: 10px;
+    justify-content:center;
+    margin-bottom: 6px;
+  }
+  input[type="number"]{
+    font-family:'JetBrains Mono', monospace;
+    font-size: 20px;
+    font-weight:700;
+    width: 160px;
+    text-align:center;
+    background: var(--frame);
+    border: 1px solid var(--frame-light);
+    border-radius: 10px;
+    color: var(--cream);
+    padding: 12px 14px;
+  }
+  input[type="number"]:focus-visible{ outline:2px solid var(--gold); outline-offset:1px; }
+  input[type="number"]::-webkit-outer-spin-button,
+  input[type="number"]::-webkit-inner-spin-button{ -webkit-appearance:none; margin:0; }
+
+  kbd{
+    font-family:'JetBrains Mono', monospace;
+    font-size: 11px;
+    background: var(--frame);
+    border: 1px solid var(--frame-light);
+    border-radius: 5px;
+    padding: 2px 7px;
+    color: var(--gold);
+  }
+  input[type="number"]:disabled{
+    opacity: 0.45;
+  }
+  button:disabled{
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
+
+  .feedback{
+    text-align:center;
+    margin-top: 18px;
+    padding: 16px;
+    border-radius: 10px;
+    font-size: 15px;
+  }
+  .feedback.correct{ background: rgba(61,214,192,0.14); color:#a3f0e0; border: 1px solid rgba(61,214,192,0.3); }
+  .feedback.wrong{ background: rgba(255,117,151,0.12); color:#ffc4d1; border: 1px solid rgba(255,117,151,0.28); }
+  .feedback .time{ font-family:'JetBrains Mono', monospace; color: var(--gold); }
+
+  .stats{
+    display:grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+    margin-top: 4px;
+  }
+  .stat{
+    background: var(--frame);
+    border-radius: 10px;
+    padding: 14px;
+    text-align:center;
+    border: 1px solid var(--frame-light);
+  }
+  .stat.c-teal{ border-color: var(--teal-dim); }
+  .stat.c-teal .num{ color: var(--teal); }
+  .stat.c-gold .num{ color: var(--gold); }
+  .stat.c-violet{ border-color: var(--violet-dim); }
+  .stat.c-violet .num{ color: var(--violet); }
+  .stat .num{
+    font-family:'JetBrains Mono', monospace;
+    font-size: 22px;
+    font-weight:700;
+    color: var(--gold);
+    display:block;
+  }
+  .stat .label{ font-size:11px; color: var(--muted); text-transform:uppercase; letter-spacing:1px; }
+
+  .progress-text{
+    text-align:center;
+    font-size:13px;
+    color: var(--muted);
+    font-family:'JetBrains Mono', monospace;
+    margin-bottom: 4px;
+  }
+
+  .footnote{
+    font-size:12px;
+    color: var(--muted);
+    text-align:center;
+    margin-top: 24px;
+    line-height:1.6;
+  }
+
+  .center{ text-align:center; }
+  .hidden{ display:none; }
+
+  /* --- Streak & PB badges --- */
+  .badge-row{
+    display:flex;
+    justify-content:center;
+    gap: 10px;
+    margin-bottom: 10px;
+    flex-wrap:wrap;
+  }
+  .badge{
+    font-family:'JetBrains Mono', monospace;
+    font-size: 12px;
+    font-weight:700;
+    padding: 5px 12px;
+    border-radius: 20px;
+    display:inline-flex;
+    align-items:center;
+    gap:5px;
+  }
+  .badge.streak{ background: rgba(255,117,151,0.14); color: var(--rose); border:1px solid rgba(255,117,151,0.3); }
+  .badge.pb{ background: rgba(212,169,67,0.14); color: var(--gold); border:1px solid rgba(212,169,67,0.3); }
+  .badge.pb.new{ animation: pop 0.4s ease; }
+  @keyframes pop{
+    0%{ transform: scale(1); }
+    40%{ transform: scale(1.15); }
+    100%{ transform: scale(1); }
+  }
+
+  /* --- Countdown overlay --- */
+  .countdown{
+    font-family:'Fraunces', serif;
+    font-size: 56px;
+    font-weight:700;
+    color: var(--gold);
+    padding: 50px 0;
+    animation: pop 0.4s ease;
+  }
+
+  /* --- History table --- */
+  .history-wrap{ margin-top: 20px; }
+  .history-table{
+    width:100%;
+    border-collapse: collapse;
+    font-size: 13px;
+  }
+  .history-table th{
+    font-family:'JetBrains Mono', monospace;
+    font-size: 10px;
+    text-transform:uppercase;
+    letter-spacing:1px;
+    color: var(--muted);
+    text-align:left;
+    padding: 8px 10px;
+    border-bottom: 1px solid var(--frame-light);
+  }
+  .history-table td{
+    padding: 8px 10px;
+    border-bottom: 1px solid rgba(107,74,38,0.35);
+    font-family:'JetBrains Mono', monospace;
+  }
+  .history-table tr:last-child td{ border-bottom:none; }
+  .history-table td.status-correct{ color: var(--teal); font-weight:700; }
+  .history-table td.status-wrong{ color: var(--rose); font-weight:700; }
+  .history-scroll{ max-height: 260px; overflow-y:auto; border-radius:10px; border:1px solid var(--frame-light); }
+</style>
+</head>
+<body>
+<div class="app">
+
+  <h1>Latihan Sempoa</h1>
+  <p class="sub">Soal penjumlahan &amp; pengurangan berantai untuk tes kecepatan sempoa kamu. Atur jumlah angka, mulai timer, dan cek progressmu di rod di bawah.</p>
+
+  <!-- SETTINGS SCREEN -->
+  <div class="panel" id="screen-settings">
+    <div class="field-label">Jumlah digit angka</div>
+    <div class="row" id="digit-options"></div>
+
+    <div class="field-label">Jumlah angka per soal</div>
+    <div class="row" id="term-options"></div>
+
+    <div class="field-label">Jumlah soal per sesi</div>
+    <div class="row" id="count-options"></div>
+
+    <div class="field-label" style="margin-top:24px;">&nbsp;</div>
+    <button class="btn-primary" id="btn-start" style="width:100%;">Mulai Sesi</button>
+  </div>
+
+  <!-- SESSION SCREEN -->
+  <div class="panel hidden" id="screen-session">
+    <div class="rod-wrap">
+      <div class="rod-label">Rod Progress</div>
+      <div class="rod" id="rod"></div>
+    </div>
+
+    <div class="progress-text" id="progress-text">Soal 1 / 10</div>
+    <div class="badge-row">
+      <span class="badge streak" id="badge-streak">🔥 Streak: 0</span>
+      <span class="badge pb" id="badge-pb">⭐ PB: -</span>
+    </div>
+
+    <div class="stage" id="tap-zone">
+      <div class="countdown hidden" id="countdown">3</div>
+      <div id="problem-area">
+        <div class="timer" id="timer">00.0 detik</div>
+        <div class="expr" id="expr"></div>
+
+        <div class="hint" id="space-hint">Ketuk di mana saja di area ini, atau tekan <strong>SPASI</strong> di laptop, untuk stop timer</div>
+
+        <div id="answer-block" class="hidden">
+          <div class="answer-row">
+            <input type="number" id="answer-input" placeholder="Jawaban" autocomplete="off" disabled />
+            <button class="btn-primary" id="btn-check" disabled>Cek Jawaban</button>
+          </div>
+        </div>
+
+        <div id="feedback-block"></div>
+
+        <div class="row center" style="justify-content:center; margin-top:18px;">
+          <button class="btn-ghost hidden" id="btn-next">Soal Berikutnya</button>
+          <button class="btn-ghost" id="btn-quit">Ganti Pengaturan</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SUMMARY SCREEN -->
+  <div class="panel hidden" id="screen-summary">
+    <div class="field-label center" style="font-size:14px;">Ringkasan Sesi</div>
+    <div class="rod-wrap">
+      <div class="rod-label">Rod Akhir</div>
+      <div class="rod" id="rod-final"></div>
+    </div>
+    <div class="stats">
+      <div class="stat c-teal"><span class="num" id="stat-avg">-</span><span class="label">Rata² Waktu</span></div>
+      <div class="stat c-gold"><span class="num" id="stat-best">-</span><span class="label">Waktu Terbaik</span></div>
+      <div class="stat c-violet"><span class="num" id="stat-acc">-</span><span class="label">Akurasi</span></div>
+    </div>
+    <div class="stats" style="grid-template-columns: 1fr; margin-top:12px;">
+      <div class="stat" style="border-color: var(--rose-dim);"><span class="num" id="stat-streak" style="color:var(--rose);">-</span><span class="label">Streak Terbaik</span></div>
+    </div>
+
+    <div class="history-wrap">
+      <div class="rod-label">Riwayat Jawaban</div>
+      <div class="history-scroll">
+        <table class="history-table">
+          <thead>
+            <tr><th>No</th><th>Jawaban Kamu</th><th>Jawaban Benar</th><th>Waktu</th><th>Status</th></tr>
+          </thead>
+          <tbody id="history-body"></tbody>
+        </table>
+      </div>
+    </div>
+    <div class="row" style="margin-top:24px;">
+      <button class="btn-primary" id="btn-retry" style="flex:1;">Latihan Lagi</button>
+      <button class="btn-ghost" id="btn-newsettings" style="flex:1;">Ubah Pengaturan</button>
+    </div>
+  </div>
+
+  <p class="footnote">Sesi latihan tersimpan sementara di halaman ini saja &mdash; refresh halaman akan mereset progress. Cocok untuk drill harian, bukan pelacakan jangka panjang.</p>
+
+</div>
+
+<script>
+(function(){
+  const DIGIT_CHOICES = [
+    { label: '1 Digit', value: 1 },
+    { label: '2 Digit', value: 2 },
+    { label: '3 Digit', value: 3 },
+    { label: '4 Digit', value: 4 },
+  ];
+  const TERM_CHOICES = [10, 15, 20, 25, 30];
+  const COUNT_CHOICES = [5, 10, 15, 20];
+
+  let settings = { digits: 2, terms: 20, count: 10 };
+  let session = { problems: [], index: 0, history: [], startTime: 0, timerInterval: null, frozen: true, frozenElapsed: 0, streak: 0, bestStreak: 0, bestTime: null, inCountdown: false };
+
+  const el = id => document.getElementById(id);
+
+  // --- sound effects (Web Audio API, no files needed) ---
+  let audioCtx = null;
+  function getAudioCtx(){
+    if(!audioCtx){
+      const AC = window.AudioContext || window.webkitAudioContext;
+      audioCtx = new AC();
+    }
+    return audioCtx;
+  }
+  function playTone(freq, duration, delay, type){
+    try{
+      const ctx = getAudioCtx();
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = type || 'sine';
+      osc.frequency.value = freq;
+      gain.gain.setValueAtTime(0.0001, ctx.currentTime + delay);
+      gain.gain.exponentialRampToValueAtTime(0.18, ctx.currentTime + delay + 0.02);
+      gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + delay + duration);
+      osc.connect(gain); gain.connect(ctx.destination);
+      osc.start(ctx.currentTime + delay);
+      osc.stop(ctx.currentTime + delay + duration + 0.02);
+    } catch(e){ /* audio unsupported, ignore silently */ }
+  }
+  function playCorrectSound(){
+    playTone(660, 0.12, 0, 'sine');
+    playTone(880, 0.16, 0.09, 'sine');
+  }
+  function playWrongSound(){
+    playTone(180, 0.22, 0, 'sawtooth');
+  }
+
+  // --- build settings buttons ---
+  function buildOptionButtons(container, choices, selected, onPick){
+    container.innerHTML = '';
+    choices.forEach(choice => {
+      const isObj = typeof choice === 'object';
+      const val = isObj ? choice.value : choice;
+      const label = isObj ? choice.label : choice;
+      const b = document.createElement('button');
+      b.className = 'btn-option' + (val === selected ? ' active' : '');
+      b.textContent = label;
+      b.addEventListener('click', () => {
+        [...container.children].forEach(c => c.classList.remove('active'));
+        b.classList.add('active');
+        onPick(val);
+      });
+      container.appendChild(b);
+    });
+  }
+  buildOptionButtons(el('digit-options'), DIGIT_CHOICES, settings.digits, v => settings.digits = v);
+  buildOptionButtons(el('term-options'), TERM_CHOICES, settings.terms, v => settings.terms = v);
+  buildOptionButtons(el('count-options'), COUNT_CHOICES, settings.count, v => settings.count = v);
+
+  // --- problem generator (mirrors chained two-digit +/- logic) ---
+  function randInt(min, max){ return Math.floor(Math.random() * (max - min + 1)) + min; }
+
+  function makeProblem(nTerms, digits){
+    const min = Math.pow(10, digits - 1);      // e.g. digits=2 -> 10
+    const max = Math.pow(10, digits) - 1;       // e.g. digits=2 -> 99
+    const maxRunning = Math.pow(10, digits + 1) - 1; // room for carrying, e.g. 999 for 2-digit
+
+    const terms = []; const signs = [];
+    let first = randInt(Math.round(min + (max - min) * 0.4), max);
+    terms.push(first); signs.push('+');
+    let running = first;
+    for(let i = 0; i < nTerms - 1; i++){
+      let sign, num, newRunning;
+      for(let attempt = 0; attempt < 50; attempt++){
+        sign = Math.random() < 0.5 ? '+' : '-';
+        num = randInt(min, max);
+        newRunning = sign === '+' ? running + num : running - num;
+        if(newRunning >= 0 && newRunning <= maxRunning) break;
+      }
+      terms.push(num); signs.push(sign);
+      running = newRunning;
+    }
+    return { terms, signs, answer: running };
+  }
+
+  function renderExpr(problem){
+    let html = `<span class="term">${problem.terms[0]}</span>`;
+    for(let i = 1; i < problem.terms.length; i++){
+      const isPlus = problem.signs[i] === '+';
+      const opSym = isPlus ? '+' : '\u2212';
+      const opClass = isPlus ? 'plus' : 'minus';
+      html += ` <span class="op ${opClass}">${opSym}</span> <span class="term">${problem.terms[i]}</span>`;
+    }
+    return html;
+  }
+
+  // --- rod rendering ---
+  function renderRod(container, history, upcoming){
+    container.innerHTML = '';
+    history.forEach((h, i) => {
+      const bead = document.createElement('div');
+      bead.className = 'bead ' + (h.correct ? 'correct' : 'wrong');
+      bead.textContent = (i + 1);
+      bead.title = `Soal ${i+1}: ${h.correct ? 'Benar' : 'Salah'} — ${h.timeSec}s`;
+      container.appendChild(bead);
+    });
+    if(upcoming){
+      for(let i = 0; i < upcoming; i++){
+        const ph = document.createElement('div');
+        ph.className = 'bead placeholder';
+        container.appendChild(ph);
+      }
+    }
+  }
+
+  // --- session flow ---
+  function startSession(){
+    session.problems = [];
+    for(let i = 0; i < settings.count; i++){
+      session.problems.push(makeProblem(settings.terms, settings.digits));
+    }
+    session.index = 0;
+    session.history = [];
+    session.streak = 0;
+    session.bestStreak = 0;
+    session.bestTime = null;
+    updateBadges();
+    showScreen('session');
+    loadCurrentProblem();
+  }
+
+  function updateBadges(){
+    el('badge-streak').textContent = `🔥 Streak: ${session.streak}`;
+    el('badge-pb').textContent = session.bestTime === null ? '⭐ PB: -' : `⭐ PB: ${session.bestTime.toFixed(1)}s`;
+  }
+
+  function loadCurrentProblem(){
+    const p = session.problems[session.index];
+    el('progress-text').textContent = `Soal ${session.index + 1} / ${settings.count}`;
+    el('expr').innerHTML = renderExpr(p);
+    el('answer-input').value = '';
+    el('answer-input').disabled = true;
+    el('btn-check').disabled = false;
+    el('feedback-block').innerHTML = '';
+    el('btn-next').classList.add('hidden');
+    el('answer-block').classList.add('hidden');
+    el('space-hint').classList.remove('hidden');
+    renderRod(el('rod'), session.history, settings.count - session.history.length);
+
+    // countdown overlay before revealing the problem
+    el('problem-area').classList.add('hidden');
+    el('tap-zone').classList.remove('tappable');
+    session.inCountdown = true;
+    const cd = el('countdown');
+    cd.classList.remove('hidden');
+    let n = 3;
+    cd.textContent = n;
+    clearInterval(session.timerInterval);
+    const countdownInterval = setInterval(() => {
+      n--;
+      if(n > 0){
+        cd.textContent = n;
+      } else {
+        clearInterval(countdownInterval);
+        cd.classList.add('hidden');
+        el('problem-area').classList.remove('hidden');
+        session.inCountdown = false;
+        beginTiming();
+      }
+    }, 600);
+  }
+
+  function beginTiming(){
+    el('tap-zone').classList.add('tappable');
+    session.frozen = false;
+    session.frozenElapsed = 0;
+    session.startTime = performance.now();
+    if(session.timerInterval) clearInterval(session.timerInterval);
+    session.timerInterval = setInterval(updateTimer, 100);
+    updateTimer();
+  }
+
+  function updateTimer(){
+    if(session.frozen) return;
+    const elapsed = (performance.now() - session.startTime) / 1000;
+    el('timer').textContent = elapsed.toFixed(1) + ' detik';
+  }
+
+  function freezeTimer(){
+    if(session.frozen) return;
+    session.frozen = true;
+    session.frozenElapsed = (performance.now() - session.startTime) / 1000;
+    clearInterval(session.timerInterval);
+    el('timer').textContent = session.frozenElapsed.toFixed(1) + ' detik';
+    el('space-hint').classList.add('hidden');
+    el('tap-zone').classList.remove('tappable');
+    el('answer-block').classList.remove('hidden');
+    el('answer-input').disabled = false;
+    setTimeout(() => el('answer-input').focus(), 30);
+  }
+
+  function checkAnswer(){
+    if(!session.frozen) { freezeTimer(); return; }
+    const val = el('answer-input').value;
+    if(val === '') { el('answer-input').focus(); return; }
+    const elapsedSec = session.frozenElapsed;
+    const p = session.problems[session.index];
+    const userAns = parseInt(val, 10);
+    const correct = userAns === p.answer;
+
+    session.history.push({
+      correct,
+      timeSec: elapsedSec.toFixed(1),
+      userAnswer: userAns,
+      correctAnswer: p.answer
+    });
+
+    if(correct){
+      playCorrectSound();
+      session.streak++;
+      if(session.streak > session.bestStreak) session.bestStreak = session.streak;
+      if(session.bestTime === null || elapsedSec < session.bestTime){
+        session.bestTime = elapsedSec;
+        el('badge-pb').classList.add('new');
+        setTimeout(() => el('badge-pb').classList.remove('new'), 400);
+      }
+    } else {
+      playWrongSound();
+      session.streak = 0;
+    }
+    updateBadges();
+
+    const fb = el('feedback-block');
+    fb.innerHTML = correct
+      ? `<div class="feedback correct">Benar! &mdash; <span class="time">${elapsedSec.toFixed(1)} detik</span></div>`
+      : `<div class="feedback wrong">Kurang tepat. Jawaban: <strong>${p.answer}</strong> &mdash; <span class="time">${elapsedSec.toFixed(1)} detik</span></div>`;
+
+    el('answer-input').disabled = true;
+    el('btn-check').disabled = true;
+    el('answer-block').classList.add('hidden');
+    renderRod(el('rod'), session.history, settings.count - session.history.length);
+
+    if(session.index + 1 < session.problems.length){
+      el('btn-next').classList.remove('hidden');
+    } else {
+      setTimeout(showSummary, 600);
+    }
+  }
+
+  function nextProblem(){
+    session.index++;
+    loadCurrentProblem();
+  }
+
+  function showSummary(){
+    showScreen('summary');
+    const times = session.history.map(h => parseFloat(h.timeSec));
+    const avg = times.reduce((a,b) => a+b, 0) / times.length;
+    const correctTimes = session.history.filter(h => h.correct).map(h => parseFloat(h.timeSec));
+    const best = correctTimes.length ? Math.min(...correctTimes) : null;
+    const correctCount = session.history.filter(h => h.correct).length;
+    const acc = Math.round((correctCount / session.history.length) * 100);
+
+    el('stat-avg').textContent = avg.toFixed(1) + 's';
+    el('stat-best').textContent = best === null ? '-' : best.toFixed(1) + 's';
+    el('stat-acc').textContent = acc + '%';
+    el('stat-streak').textContent = session.bestStreak;
+    renderRod(el('rod-final'), session.history, 0);
+
+    const body = el('history-body');
+    body.innerHTML = '';
+    session.history.forEach((h, i) => {
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td>${i + 1}</td>
+        <td>${h.userAnswer}</td>
+        <td>${h.correctAnswer}</td>
+        <td>${h.timeSec}s</td>
+        <td class="${h.correct ? 'status-correct' : 'status-wrong'}">${h.correct ? 'Benar' : 'Salah'}</td>
+      `;
+      body.appendChild(tr);
+    });
+  }
+
+  function showScreen(name){
+    ['settings','session','summary'].forEach(s => {
+      el('screen-' + s).classList.toggle('hidden', s !== name);
+    });
+  }
+
+  // --- wiring ---
+  el('btn-start').addEventListener('click', startSession);
+  el('btn-check').addEventListener('click', checkAnswer);
+  el('tap-zone').addEventListener('click', (e) => {
+    if(e.target.closest('button') || e.target.closest('input')) return;
+    if(!session.frozen && !session.inCountdown) freezeTimer();
+  });
+  el('answer-input').addEventListener('keydown', e => {
+    if(e.key === 'Enter') checkAnswer();
+  });
+  document.addEventListener('keydown', e => {
+    const sessionVisible = !el('screen-session').classList.contains('hidden');
+    if(e.code === 'Space' && sessionVisible && !session.frozen && !session.inCountdown){
+      e.preventDefault();
+      freezeTimer();
+    }
+  });
+  el('btn-next').addEventListener('click', nextProblem);
+  el('btn-quit').addEventListener('click', () => {
+    clearInterval(session.timerInterval);
+    showScreen('settings');
+  });
+  el('btn-retry').addEventListener('click', startSession);
+  el('btn-newsettings').addEventListener('click', () => showScreen('settings'));
+
+})();
+</script>
+</body>
+</html>
